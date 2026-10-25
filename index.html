@@ -1274,6 +1274,7 @@
     const S = fishState;
     if (!S.ready) return;
     S.raf = requestAnimationFrame(tickFish);
+    window.__fishCount = S.list.length;
 
     const dt = Math.min(Math.max((now - S.last) / 1000, 0), 0.05);
     S.last = now;
