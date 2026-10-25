@@ -1033,7 +1033,8 @@
      ★ 热带鱼（覆盖所有页面，点击受惊快速游走）
      ============================================================ */
   const FISH_CFG = {
-    url: 'https://github.com/30454991-hub/frutiger-aero-portfolio/releases/download/v1.0-assets/fish.fbx',
+    // fish.fbx (45MB) 拆成 6 片存在 assets/fish.fbx.part01~06，加载时拼接
+    chunkCount: 6,
     max: 6,            // 桌面端同屏上限
     maxMobile: 4,      // 移动端同屏上限
     len: [48, 86],     // 鱼身长度（屏幕像素）
@@ -1085,9 +1086,21 @@
     layoutFishLayer();
     window.addEventListener('resize', layoutFishLayer);
 
-    new FBXLoader().load(
-      FISH_CFG.url,
-      (obj) => {
+    // fish.fbx (45MB) 拆成 6 个分片存储，下载后拼接再交给 FBXLoader.parse
+    const chunkCount = FISH_CFG.chunkCount;
+    const chunkUrls = [];
+    for (let i = 1; i <= chunkCount; i++) {
+      chunkUrls.push('./assets/fish.fbx.part' + String(i).padStart(2, '0'));
+    }
+    Promise.all(chunkUrls.map(u => fetch(u).then(r => {
+      if (!r.ok) throw new Error(u + ' ' + r.status);
+      return r.arrayBuffer();
+    }))).then(buffers => {
+      const total = buffers.reduce((s, b) => s + b.byteLength, 0);
+      const merged = new Uint8Array(total);
+      let off = 0;
+      for (const b of buffers) { merged.set(new Uint8Array(b), off); off += b.byteLength; }
+      new FBXLoader().parse(merged.buffer, '', (obj) => {
         S.species = buildFishSpecies(obj);
         if (!S.species.length) { S.failed = true; return; }
         S.ready = true;
@@ -1096,10 +1109,8 @@
         setInterval(() => { if (S.list.length < fishMax()) makeFish3D(); }, 3200);
         S.last = performance.now();
         S.raf = requestAnimationFrame(tickFish);
-      },
-      undefined,
-      (err) => { S.failed = true; console.warn('[fish] 模型加载失败：', err); }
-    );
+      }, (err) => { S.failed = true; console.warn('[fish] 模型解析失败：', err); });
+    }).catch(err => { S.failed = true; console.warn('[fish] 分片下载失败：', err); });
   }
 
   /** 视口尺寸变化时同步相机与渲染尺寸（世界单位 = CSS 像素） */
