@@ -1,0 +1,8 @@
+# 开发临时产物
+.trae-html-share-packages/
+mobile-harness.html
+
+# 系统
+Thumbs.db
+.DS_Store
+*.log
