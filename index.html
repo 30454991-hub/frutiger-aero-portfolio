@@ -1085,6 +1085,7 @@
     S.camera = new THREE.PerspectiveCamera(45, 1, 1, 6000);
     layoutFishLayer();
     window.addEventListener('resize', layoutFishLayer);
+    window.__fishState = S;  // debug
 
     // fish.fbx (45MB) 拆成 6 个分片存储，下载后拼接再交给 FBXLoader.parse
     window.__fishStatus = 'start-fetch-chunks';
