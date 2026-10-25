@@ -1103,18 +1103,26 @@
       let off = 0;
       for (const b of buffers) { merged.set(new Uint8Array(b), off); off += b.byteLength; }
       window.__fishStatus = 'parsing-fbx';
-      new FBXLoader().parse(merged.buffer, '', (obj) => {
-        S.species = buildFishSpecies(obj);
-        window.__fishStatus = 'parsed species=' + S.species.length;
-        if (!S.species.length) { S.failed = true; return; }
-        S.ready = true;
-        for (let i = 0; i < Math.min(3, fishMax()); i++) setTimeout(makeFish3D, i * 900);
-        setTimeout(() => { if (S.list.length < fishMax()) makeFish3D(); }, 1600);
-        setInterval(() => { if (S.list.length < fishMax()) makeFish3D(); }, 3200);
-        S.last = performance.now();
-        S.raf = requestAnimationFrame(tickFish);
-        window.__fishStatus = 'running fish=' + S.list.length;
-      }, (err) => { S.failed = true; window.__fishStatus = 'parse-error: ' + err; console.warn('[fish] 模型解析失败：', err); });
+      // FBXLoader.parse 是同步方法，直接返回对象（不接受回调）
+      let obj;
+      try {
+        obj = new FBXLoader().parse(merged.buffer, '');
+      } catch (err) {
+        S.failed = true;
+        window.__fishStatus = 'parse-error: ' + err;
+        console.warn('[fish] 模型解析失败：', err);
+        return;
+      }
+      S.species = buildFishSpecies(obj);
+      window.__fishStatus = 'parsed species=' + S.species.length;
+      if (!S.species.length) { S.failed = true; return; }
+      S.ready = true;
+      for (let i = 0; i < Math.min(3, fishMax()); i++) setTimeout(makeFish3D, i * 900);
+      setTimeout(() => { if (S.list.length < fishMax()) makeFish3D(); }, 1600);
+      setInterval(() => { if (S.list.length < fishMax()) makeFish3D(); }, 3200);
+      S.last = performance.now();
+      S.raf = requestAnimationFrame(tickFish);
+      window.__fishStatus = 'running fish=' + S.list.length;
     }).catch(err => { S.failed = true; window.__fishStatus = 'fetch-error: ' + err; console.warn('[fish] 分片下载失败：', err); });
   }
 
