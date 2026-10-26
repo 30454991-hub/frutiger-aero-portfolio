@@ -758,7 +758,7 @@
         <div class="panel gloss mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 p-8 sm:p-12 lg:grid-cols-[1fr_auto]">
 
           <div>
-            <p class="meta-label reveal" id="heroKicker">影像与叙事 · 作品集</p>
+            <p class="meta-label reveal" id="heroKicker">美学分享-曾经承诺的未来</p>
             <h1 class="font-display mt-6 text-[clamp(3rem,9vw,6.5rem)] font-extrabold leading-[1.02] text-ink reveal" id="heroTitle">
               Frutiger<br /><em class="font-semibold">Aero</em>
             </h1>
@@ -1538,6 +1538,9 @@
 
     // 音源不可用（文件缺失 / 格式不被浏览器支持）时锁定胶囊，不再假装"点击播放"
     audio.addEventListener('error', () => {
+      const code = audio.error ? audio.error.code : 0;
+      // code=1 是用户/播放逻辑中止（如自动播放被拒后重试），不算音源故障
+      if (code === 1) return;
       bgmState.failed = true;
       bgmState.want = false;
       setBgmUI('error');
@@ -2047,7 +2050,7 @@
     const card = (i) => `
       <article class="work-card reveal is-in" data-work-card data-id="${i.id}">
         <div class="relative overflow-hidden">
-          <img src="${i.image}" alt="${i.title}" class="aspect-[4/3] w-full object-cover" loading="lazy" />
+          <img src="${i.image}" alt="${i.title}" class="aspect-[4/3] w-full object-cover" />
           <span class="time-bubble">${fmt(i.duration)}</span>
           <div class="card-shine"></div>
         </div>
